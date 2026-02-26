@@ -1,4 +1,5 @@
 Time Series Forecasting: Germany's Weekly Electricity Consumption
+
 Project Overview
 This project develops time series forecasting models to predict Germany's weekly electricity consumption (2006-2017) using data from Open Power System Data (OPSD). Multiple approaches including Holt-Winters, seasonal regression, ARIMA, and two-level combined forecasting were implemented to identify the optimal model for energy planning and grid management.
 
@@ -14,7 +15,6 @@ Original Format: Daily electricity consumption
 Processed Format: Weekly totals (aggregated in Excel)
 
 Data Structure
-
 Week_Start    | Consumption (MWh)
 2006-01-01    | 8477.67
 2006-01-08    | 9497.16
@@ -32,30 +32,24 @@ Train/Validation split: 2006-2013 / 2014-2017 (208 weeks)
 Methodology
 1. Exploratory Data Analysis
 Visualization: Weekly consumption plot (winter peaks, summer dips)
-
-STL Decomposition: Trend (stable), Seasonality (strong yearly), Residuals
-​
-
+STL Decomposition: Trend (stable), Seasonality (strong yearly), Residual​
 ACF Analysis: Strong autocorrelation confirming predictability
-
 Stationarity Test: AR(1) coefficient = 0.8247 (p<2.2e-16) → Not random walk
 ​
 
 2. Forecasting Models
+3. 
 Model 1: Holt-Winters Exponential Smoothing
-
 hw.ZZZ <- ets(train.ts, model="ZZZ")  # ANN(A) selected
 hw.ZZZ.pred <- forecast(hw.ZZZ, h=208)
 Metrics: RMSE 416.6, MAPE 2.97%
 
 Model 2: Regression with Seasonality
-r
 train.season <- tslm(train.ts ~ season)
 train.season.pred <- forecast(train.season, h=208)
 Metrics: RMSE 590.7, MAPE 5.21%
 
 Model 3: Two-Level Forecasting (Best)
-r
 # Level 1: Seasonal regression
 elec.season <- tslm(elec.ts ~ season)
 
@@ -67,7 +61,6 @@ tot.fst.2level.elec <- elec.season.pred$mean + elec.ma.trail.res.pred$mean
 Metrics: RMSE 238.9, MAPE 1.81% ✅
 
 Model 4: Seasonal ARIMA
-r
 arima.seas <- auto.arima(elec.ts)  # ARIMA(1,0,2)(0,1,1)[52]
 arima.seas.pred <- forecast(arima.seas, h=52)
 Metrics: RMSE 277.4, MAPE 2.10%
@@ -80,16 +73,13 @@ Seasonal ARIMA	277.4	2.10%	🟢
 Regression (Seasonal)	590.7	5.21%	❌
 Code Highlights
 Time Series Setup
-r
 elec.ts <- ts(data$Consumption, start=c(2006,1), end=c(2017,52), freq=52)
 train.ts <- window(elec.ts, end=c(2013,52))
 valid.ts <- window(elec.ts, start=c(2014,1))
 STL Decomposition
-r
 elec.stl <- stl(elec.ts, s.window="periodic")
 autoplot(elec.stl)
 Accuracy Evaluation
-r
 accuracy(train.season.pred$mean, valid.ts)
 # RMSE 238.916, MAPE 1.807
 Visualizations
