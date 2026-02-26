@@ -1,141 +1,207 @@
-Time Series Forecasting: Germany's Weekly Electricity Consumption
+🇩🇪 Germany Weekly Electricity Forecasting
+Time Series Analytics Project 
+📌 Project Overview
 
-Project Overview
-This project develops time series forecasting models to predict Germany's weekly electricity consumption (2006-2017) using data from Open Power System Data (OPSD). Multiple approaches including Holt-Winters, seasonal regression, ARIMA, and two-level combined forecasting were implemented to identify the optimal model for energy planning and grid management.
+This project develops and compares multiple time series forecasting models to predict weekly electricity consumption in Germany (2006–2017).
 
-Best Model: Regression with Seasonality + Trailing Moving Average (RMSE: 238.9, MAPE: 1.81%)
-​
+Accurate forecasting supports:
 
-Dataset Information:
+⚡ Grid stability
 
-Data Source
-Provider: Open Power System Data (OPSD)
-Time Period: 2006-2017 (624 weekly observations)
-Original Format: Daily electricity consumption
-Processed Format: Weekly totals (aggregated in Excel)
+🌱 Renewable energy integration
+
+🏗 Infrastructure planning
+
+📊 Policy decision-making
+
+The objective was to identify the most reliable model that captures both:
+
+Strong yearly seasonality (52-week cycle)
+
+Short-term consumption fluctuations
+
+📊 Dataset
+
+Source: Open Power System Data (OPSD)
+Time Period: 2006–2017
+Frequency: Daily data aggregated to weekly totals
+Target Variable: Weekly electricity consumption (MWh)
 
 Data Structure
-Week_Start    | Consumption (MWh)
-2006-01-01    | 8477.67
-2006-01-08    | 9497.16
-...
-2017-12-24    | 10830.53
+Column	Description
+Week Start	Start date of each week
+Consumption	Total electricity consumed that week
+🔎 Exploratory Analysis
 
-Preprocessing
-Daily → Weekly aggregation (sum by week start date)
+Key observations:
 
-Time series object: ts(data$Consumption, freq=52)
+Clear yearly seasonal pattern (winter peaks, summer dips)
 
-Train/Validation split: 2006-2013 / 2014-2017 (208 weeks)
-​
+No strong long-term upward or downward trend
 
-Methodology
-1. Exploratory Data Analysis
-Visualization: Weekly consumption plot (winter peaks, summer dips)
-STL Decomposition: Trend (stable), Seasonality (strong yearly), Residual​
-ACF Analysis: Strong autocorrelation confirming predictability
-Stationarity Test: AR(1) coefficient = 0.8247 (p<2.2e-16) → Not random walk
-​
+Significant autocorrelation across lags
 
-2. Forecasting Models
-3. 
-Model 1: Holt-Winters Exponential Smoothing
-hw.ZZZ <- ets(train.ts, model="ZZZ")  # ANN(A) selected
-hw.ZZZ.pred <- forecast(hw.ZZZ, h=208)
-Metrics: RMSE 416.6, MAPE 2.97%
+Series is not a random walk (AR(1) ≠ 1, p < 0.05)
 
-Model 2: Regression with Seasonality
-train.season <- tslm(train.ts ~ season)
-train.season.pred <- forecast(train.season, h=208)
-Metrics: RMSE 590.7, MAPE 5.21%
+Time series decomposition revealed:
 
-Model 3: Two-Level Forecasting (Best)
-# Level 1: Seasonal regression
-elec.season <- tslm(elec.ts ~ season)
+✔ Strong seasonal component
 
-# Level 2: Trailing MA on residuals (k=4)
-elec.ma.trail.res <- rollmean(elec.season$residuals, k=4, align="right")
+✔ Stable underlying trend
 
-# Combined forecast
-tot.fst.2level.elec <- elec.season.pred$mean + elec.ma.trail.res.pred$mean
-Metrics: RMSE 238.9, MAPE 1.81% ✅
+✔ Minimal unexplained residual structure
 
-Model 4: Seasonal ARIMA
-arima.seas <- auto.arima(elec.ts)  # ARIMA(1,0,2)(0,1,1)[52]
-arima.seas.pred <- forecast(arima.seas, h=52)
-Metrics: RMSE 277.4, MAPE 2.10%
+🧠 Models Implemented
+1️⃣ Holt-Winters (ETS – ANN)
 
-Model Performance Comparison
-Model	RMSE	MAPE	Status
-Holt-Winters	416.6	2.97%	❌
-Regression + TMA ✅	238.9	1.81%	Best
-Seasonal ARIMA	277.4	2.10%	🟢
-Regression (Seasonal)	590.7	5.21%	❌
-Code Highlights
-Time Series Setup
-elec.ts <- ts(data$Consumption, start=c(2006,1), end=c(2017,52), freq=52)
-train.ts <- window(elec.ts, end=c(2013,52))
-valid.ts <- window(elec.ts, start=c(2014,1))
-STL Decomposition
-elec.stl <- stl(elec.ts, s.window="periodic")
-autoplot(elec.stl)
-Accuracy Evaluation
-accuracy(train.season.pred$mean, valid.ts)
-# RMSE 238.916, MAPE 1.807
-Visualizations
-Time Series Plot: Full 2006-2017 consumption
+Automatic model selection using:
 
-STL Components: Trend/Seasonality/Residuals
+ets(train.ts, model = "ZZZ")
 
-ACF Plot: Autocorrelation diagnostics
+Issue: Could not capture weekly seasonality (frequency = 52 limitation)
 
-Forecast vs Actual: Model validation (2014-17)
+Metric	Value
+RMSE	416.649
+MAPE	2.966%
+2️⃣ Holt-Winters + Trailing Moving Average
 
-Residual Analysis: White noise confirmation
-​
+Improved short-term correction by modeling residuals.
 
-Requirements
-r
-install.packages(c("forecast", "zoo", "ggplot2"))
-library(forecast)
-library(zoo)
-library(ggplot2)
-Data: FinalProject.csv (Week_Start, Consumption columns)
+Improvement: Better responsiveness to fluctuations.
 
-Usage
-r
-# 1. Load data
-data <- read.csv("data/FinalProject.csv")
-elec.ts <- ts(data$Consumption, freq=52)
+Metric	Value
+RMSE	384.183
+MAPE	2.71%
+3️⃣ Regression with Seasonal Dummies
 
-# 2. Run complete analysis
-source("notebooks/FinalProject.R")
+Modeled weekly seasonality explicitly using 52 dummy variables:
 
-# 3. View results in console + plots
-Key Findings
-Strong weekly seasonality: Winter peaks ~10,500 MWh, summer ~8,000 MWh
+tslm(train.ts ~ season)
+Metric	Value
+RMSE	590.719
+MAPE	5.212%
 
-Predictable patterns: Confirmed non-random walk (AR1 p<0.05)
+Captured seasonal structure but struggled with short-term volatility.
 
-Two-level superior: Captures both seasonality (80%) + short-term noise (20%)
+4️⃣ Regression + Trailing Moving Average (Best Model) 🏆
 
-Production ready: Reproducible, validated, business-applicable
+Two-Level Forecasting Approach:
 
-Applications
-Energy Grid Planning: Weekly demand forecasting
+Seasonal regression baseline
 
-Renewable Integration: Balancing intermittent sources
+Trailing Moving Average (window = 4) on residuals
 
-Policy Analysis: Energiewende impact assessment
+Final Forecast:
 
-Capacity Planning: Infrastructure investment decisions
-​
+Combined Forecast = Regression Prediction + MA Adjustment
+Metric	Value
+RMSE	238.916
+MAPE	1.807%
 
-Future Work
-Weather covariates (temperature, holidays)
+✅ Lowest forecasting error
+✅ Captures seasonality + short-term shocks
+✅ Most production-ready model
 
-Exogenous variables (GDP, industrial production)
+5️⃣ Seasonal ARIMA
 
-Daily granularity modeling
+Identified via:
 
-Real-time dashboard implementation
+auto.arima(train.ts)
+
+Selected Model:
+
+ARIMA(1,0,2)(0,1,1)[52] with drift
+Metric	Value
+RMSE	277.4
+MAPE	2.104%
+
+Strong performance but slightly underestimated winter peaks.
+
+📈 Model Comparison
+Model	RMSE	MAPE (%)
+Holt-Winters	416.649	2.966
+Holt-Winters + TMA	384.183	2.71
+Regression (Seasonal)	590.719	5.212
+Regression + TMA ⭐	238.916	1.807
+Seasonal ARIMA	277.4	2.104
+🏆 Final Recommendation
+
+Regression with Seasonality + Trailing Moving Average
+
+Why?
+
+Explicit seasonal modeling
+
+Residual correction improves precision
+
+Lowest validation error
+
+Stable residual diagnostics
+
+🔬 Validation Strategy
+
+Training Set: 2006–2013
+
+Validation Set: 2014–2017
+
+Evaluation Metrics:
+
+RMSE
+
+MAPE
+
+MAE
+
+Residual ACF diagnostics
+
+Theil’s U statistic
+
+🛠 Technical Implementation
+
+Language: R
+
+Libraries Used:
+
+forecast
+
+zoo
+
+ggplot2
+
+stats
+
+Time Series Setup:
+
+Weekly frequency: 52
+
+Structured as ts object
+
+💡 Key Insights
+
+Strong seasonality dominates electricity demand
+
+Hybrid models outperform single-method approaches
+
+Residual modeling significantly improves accuracy
+
+Explicit seasonal handling is critical for weekly data
+
+🔄 Production Recommendations
+
+To maintain forecasting reliability:
+
+Re-train model every 6 months
+
+Incorporate latest consumption data
+
+Monitor residual diagnostics
+
+Adjust for structural policy changes
+
+👩‍💻 Author
+
+Amisha Farhana Shaik
+MS in Business Analytics
+California State University, East Bay
+
+Interested in analytics, operations, forecasting, and data-driven strategy.
