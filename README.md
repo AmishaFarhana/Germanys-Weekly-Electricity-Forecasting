@@ -77,6 +77,3 @@ California State University, East Bay
 
 Interested in analytics, operations, forecasting, and data-driven strategy.
 
-Looks clean on mobile
-
-Feels more “GitHub project” than “class report”
