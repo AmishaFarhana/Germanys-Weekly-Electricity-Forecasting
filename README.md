@@ -1,4 +1,4 @@
-🇩🇪 # Germany Weekly Electricity Forecasting
+🇩🇪 Germany Weekly Electricity Forecasting
 Time Series Analytics Project
 📊 Dataset
 
